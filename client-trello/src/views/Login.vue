@@ -1,13 +1,13 @@
 <template>
   <div>
-    <form @submit.prevent="login()">
+    <form :class="$style.form" @submit.prevent="login()">
       <label class="input-group">
         <span class="input-label">نام کاربری</span>
-        <input v-model="username" class="input" type="text">
+        <input v-autofocus name="username" v-model="username" class="input" type="text">
       </label>
       <label class="input-group">
         <span class="input-label">رمز عبور</span>
-        <input v-model="password" class="input" type="password">
+        <input name="password" autocomplete="current-password" v-model="password" class="input" type="password">
       </label>
       <button>ورود</button>
     </form>
@@ -16,6 +16,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { post } from '@/utils/http'
 
 export default defineComponent({
   name: 'login',
@@ -24,17 +25,11 @@ export default defineComponent({
     password: '',
   }),
   methods: {
-    login () {
-      fetch('/login', {
-        method: 'POST',
-        body: JSON.stringify({ username: this.username, password: this.password }),
-        headers: {
-          'Content-Type': 'application/json'
-        },
+    login() {
+      post('/login', {
+        username: this.username,
+        pass: this.password
       })
-        .then(res => {
-          return res.json()
-        })
         .then(res => {
           alert(res.ok ? 'لاگین شدی' : '!')
         })
@@ -42,3 +37,11 @@ export default defineComponent({
   },
 })
 </script>
+
+<style module lang="scss">
+.form {
+  width: 90%;
+  max-width: 450px;
+  margin: auto;
+}
+</style>
