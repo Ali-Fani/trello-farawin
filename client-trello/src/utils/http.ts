@@ -1,4 +1,4 @@
-export function request(method: 'GET' | 'POST', url: string, data?: never) {
+export function request(method: 'GET' | 'POST', url: string, data?: any) {
   return new Promise<any>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open(method, url)
