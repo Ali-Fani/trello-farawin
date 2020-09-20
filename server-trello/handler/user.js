@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken');
 const { getInstance } = require("../db")
 
-const auth = async (req, res) => {
+const login = async (req, res) => {
     try {
         if (!req.body.username) {
             res.status(400).json({ success: false, error: "missing username" })
@@ -22,18 +22,11 @@ const auth = async (req, res) => {
             res.status(403).json({ success: false })
             return
         }
-        console.log("INFO:", "request ok")
-
-        const refreshToken = jwt.sign({ expireIn: "2021-01-01" }, '40bil');
-    
-        users.updateOne({ _id: user._id }, { $set: { refreshToken: refreshToken } })
-
-        const accessToken = jwt.sign({ email: user.email, id: user._id, refreshToken: refreshToken }, '30bil');
-        res.cookie('token', accessToken, { maxAge: 900000, httpOnly: true });
-
-        res.json({ success: true })
+        const ok = await generateToken(res, user._id)
+        res.json({ success: ok })
     } catch (err) {
         console.log(err)
+        res.status(500).json({ success: false })
     }
 }
 const register = async (req, res) => {
@@ -60,16 +53,48 @@ const register = async (req, res) => {
         res.json({ success: true })
     } catch (err) {
         console.log(err)
+        res.status(500).json({ success: false })
     }
 }
 
-const check = async (req, res) => {
+const refreshToken = async (req, res) => {
     try {
-     res.json({success:true})
+        const token = req.cookies.refresh_token;
+        if (!token) {
+            console.error("token not found")
+            res.status(401).json({ success: false })
+            return
+        }
+        const decoded = jwt.verify(token, "40bil");
+        const ok = await generateToken(res, decoded.id)
+        res.json({ success: ok })
+
     } catch (err) {
-        res.status(403).json({success:false, error:"invalid token"})
         console.log(err)
+        res.status(500).json({ success: false })
     }
 }
 
-module.exports = { auth, register, check } 
+
+const check = (req, res) => {
+    res.json({success:true})
+}
+
+
+const generateToken = async (res,userID) => {
+    const accessToken = jwt.sign({ id: userID }, '30bil',{ expiresIn:"15min" });
+    const rToken = jwt.sign({ id: userID }, '40bil', { expiresIn: "10d" });
+
+    const db = await getInstance()
+    const users = db.collection("users")
+    const ok = await users.updateOne({ _id: userID }, { $set: { refreshToken: rToken }})
+    if (!ok){
+        res.status(500)
+        return false
+    }
+    res.cookie('access_token', accessToken, { maxAge: 1000 * 60 * 15, httpOnly: true });
+    res.cookie('refresh_token', rToken, { maxAge: 3600 * 1000 * 10, httpOnly: true });
+    return true
+}
+
+module.exports = { login, register, refreshToken, check } 
