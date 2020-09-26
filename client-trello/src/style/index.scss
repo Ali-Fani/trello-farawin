@@ -4,8 +4,13 @@ body {
   margin: 0;
   font-family: samim;
   box-sizing: border-box;
+  background: #63bef2;
 }
 
 *, *:before, *:after {
   box-sizing: inherit;
+}
+
+input, button, textarea {
+  font: inherit;
 }
