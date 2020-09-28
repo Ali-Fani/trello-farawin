@@ -10,19 +10,20 @@
         <input placeholder="رمز عبور" name="password" autocomplete="current-password" v-model="password" class="input" type="password">
       </label>
       <button class="submit">ورود</button>
-      <button type="button" class="submit" @click="$router.push('/register')">ثبت نام</button>
+      <button type="button" class="submit secondary-button" @click="$router.push('/register')">ثبت نام</button>
     </form>
     <form v-else class="form" @submit.prevent="register()">
       <label class="input-group">
         <input placeholder="نام کاربری" v-autofocus name="username" v-model="username" class="input" type="text">
       </label>
       <label class="input-group">
-        <input placeholder="رمز عبور" name="password" autocomplete="current-password" v-model="password" class="input" type="password">
+        <input placeholder="رمز عبور" name="password" autocomplete="new-password" v-model="password" class="input" type="password">
       </label>
       <label class="input-group">
         <input placeholder="ایمیل" name="email" autocomplete="email" v-model="email" class="input" type="email">
       </label>
       <button class="submit">ثبت نام</button>
+      <button type="button" class="submit secondary-button" @click="$router.push('/login')">ورود</button>
     </form>
   </div>
 </template>
@@ -38,12 +39,15 @@ export default defineComponent({
       username: '',
       password: '',
       email: '',
-      mode: (this.$route.name === 'Login' ? 'login' : 'register') as 'login' | 'register',
+      mode: '' as 'login' | 'register',
     }
   },
   watch: {
-    $route(route) {
-      this.mode = route.name === 'Login' ? 'login' : 'register'
+    $route: {
+      immediate: true,
+      handler(route) {
+        this.mode = route.name === 'Login' ? 'login' : 'register'
+      },
     },
   },
   methods: {
@@ -53,7 +57,12 @@ export default defineComponent({
         pass: this.password
       })
         .then(res => {
-          alert(res.ok ? 'لاگین شدی' : '!')
+          if (res.success) {
+            localStorage.setItem('token', 'true')
+            this.$router.push('/')
+          } else {
+            alert('لاگین نشدی!')
+          }
         })
     },
     register() {
@@ -62,21 +71,33 @@ export default defineComponent({
         pass: this.password,
         email: this.email,
       })
+        .then(res => {
+          if (res.success) {
+            this.login()
+          } else {
+            alert('ثبت نام نشدی!')
+          }
+        })
     },
   },
 })
 </script>
 
 <style scoped lang="scss">
+.login {
+  color: #e8f5fd;
+}
+
 .logo {
   width: 100px;
   display: block;
-  margin: auto;
+  margin: 3rem auto 0;
 }
 
 .title {
   font-size: 19px;
   text-align: center;
+  margin: 2rem 0 2.5rem;
 }
 
 .form {
@@ -111,6 +132,7 @@ export default defineComponent({
   padding: .6rem .9rem;
   text-align: center;
   background: #0079bf;
+  border: 2px solid #0079bf;
   color: white;
   font-weight: bold;
   cursor: pointer;
@@ -118,5 +140,10 @@ export default defineComponent({
   &:hover {
     background: lighten($color: #0079bf, $amount: 4);
   }
+}
+
+.secondary-button {
+  background: transparent;
+  color: inherit;
 }
 </style>
