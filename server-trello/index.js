@@ -2,6 +2,6 @@
 const app = require("express")();
 app.use(require("body-parser").json());
 app.use(require("cookie-parser")());
-app.use(require("./route"));
+app.use('/api', require("./route"));
 console.log("app listen on 8090");
-app.listen(8070);
+app.listen(8090);

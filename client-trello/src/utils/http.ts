@@ -1,11 +1,23 @@
+import router from '@/router'
+
 export function request(method: 'GET' | 'POST', url: string, data?: any) {
   return new Promise<any>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open(method, url)
+    xhr.open(method, `/api${url}`)
     xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.onload = () => {
+    xhr.onload = async () => {
       try {
-        resolve(JSON.parse(xhr.responseText))
+        const result = JSON.parse(xhr.responseText)
+        // if (false) {
+        //   try {
+        //     const result = await request('POST', '/refresh', { refreshToken: localStorage.getItem('refreshToken') })
+        //     result.access_token
+        //     return request(method, url, data)
+        //   } catch (err) {
+        //     router.push('/login')
+        //   }
+        // }
+        resolve(result)
       } catch (err) {
         reject(err)
       }

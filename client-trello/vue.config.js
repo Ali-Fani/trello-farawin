@@ -1,6 +1,8 @@
 const config = {
   devServer: {
-    proxy: 'http://localhost:8090'
+    proxy: {
+      '/api': 'http://localhost:8090',
+    },
   },
 }
 

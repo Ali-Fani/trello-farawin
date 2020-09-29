@@ -9,8 +9,11 @@
       <label class="input-group">
         <input placeholder="رمز عبور" name="password" autocomplete="current-password" v-model="password" class="input" type="password">
       </label>
-      <button class="submit">ورود</button>
-      <button type="button" class="submit secondary-button" @click="$router.push('/register')">ثبت نام</button>
+      <button :class="{ 'is-loading': loading }" :disabled="loading" class="submit">
+        <fw-loading v-if="loading" class="loading" />
+        ورود
+      </button>
+      <button :disabled="loading" type="button" class="submit secondary-button" @click="$router.push('/register')">ثبت نام</button>
     </form>
     <form v-else class="form" @submit.prevent="register()">
       <label class="input-group">
@@ -22,8 +25,8 @@
       <label class="input-group">
         <input placeholder="ایمیل" name="email" autocomplete="email" v-model="email" class="input" type="email">
       </label>
-      <button class="submit">ثبت نام</button>
-      <button type="button" class="submit secondary-button" @click="$router.push('/login')">ورود</button>
+      <button :disabled="loading" class="submit">ثبت نام</button>
+      <button :disabled="loading" type="button" class="submit secondary-button" @click="$router.push('/login')">ورود</button>
     </form>
   </div>
 </template>
@@ -31,14 +34,19 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { post } from '@/utils/http'
+import Loading from '@/components/Loading.vue'
 
 export default defineComponent({
   name: 'login',
+  components: {
+    FwLoading: Loading,
+  },
   data() {
     return {
       username: '',
       password: '',
       email: '',
+      loading: false,
       mode: '' as 'login' | 'register',
     }
   },
@@ -52,20 +60,26 @@ export default defineComponent({
   },
   methods: {
     login() {
+      this.loading = true
       post('/login', {
         username: this.username,
         pass: this.password
       })
-        .then(res => {
+        .then((res: {success: boolean; access_token: string; refresh_token: string }) => {
           if (res.success) {
-            localStorage.setItem('token', 'true')
+            localStorage.setItem('token', res.access_token)
+            localStorage.setItem('refreshToken', res.refresh_token)
             this.$router.push('/')
           } else {
             alert('لاگین نشدی!')
           }
         })
+        .finally(() => {
+          this.loading = false
+        })
     },
     register() {
+      this.loading = true
       post('/register', {
         username: this.username,
         pass: this.password,
@@ -77,6 +91,9 @@ export default defineComponent({
           } else {
             alert('ثبت نام نشدی!')
           }
+        })
+        .finally(() => {
+          this.loading = false
         })
     },
   },
@@ -137,6 +154,10 @@ export default defineComponent({
   font-weight: bold;
   cursor: pointer;
   margin: 1rem 0;
+  position: relative;
+  &.is-loading {
+    color: transparent;
+  }
   &:hover {
     background: lighten($color: #0079bf, $amount: 4);
   }
@@ -145,5 +166,13 @@ export default defineComponent({
 .secondary-button {
   background: transparent;
   color: inherit;
+}
+
+.loading {
+  font-size: 10px;
+  position: absolute;
+  right: 50%;
+  bottom: 50%;
+  transform: translate(50%, 50%);
 }
 </style>
